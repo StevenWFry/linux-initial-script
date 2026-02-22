@@ -11,6 +11,13 @@ A post-install setup script for Linux that installs and configures a full suite 
 | Fedora / RHEL derivatives | dnf |
 | Arch Linux and derivatives (Manjaro, EndeavourOS, etc.) | pacman |
 
+## Repository Contents
+
+| File | Description |
+|---|---|
+| `setup.sh` | Main setup script |
+| `zshrc.template` | Pre-configured `~/.zshrc` applied automatically on fresh installs |
+
 ## Usage
 
 ```bash
@@ -134,6 +141,7 @@ On Arch and Fedora it also offers to install the full guest utilities package di
 - `atuin` on Debian/Ubuntu is installed via the official install script to `~/.atuin/bin/`. A new terminal session is needed for it to appear in `$PATH`.
 - Fedora requires RPM Fusion for VLC — the script enables the free and nonfree repos automatically if they are not already active.
 - The script keeps `sudo` alive in the background for its entire run so you are not prompted repeatedly for a password.
+- On a fresh Oh My Zsh install the script replaces the OMZ-generated `~/.zshrc` with `zshrc.template` from this repo, which comes pre-configured with all plugins, aliases, and evals. On an existing install the script patches the existing file instead.
 - `zsh-autosuggestions` and `zsh-syntax-highlighting` are cloned into `~/.oh-my-zsh/custom/plugins/` and added to the `plugins=(...)` array in `~/.zshrc` automatically. `zsh-syntax-highlighting` is always placed last in the list as required.
 - The following aliases are appended to `~/.zshrc` (idempotent — safe to re-run):
 

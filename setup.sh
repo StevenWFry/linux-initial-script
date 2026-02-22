@@ -6,6 +6,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ZSHRC_TEMPLATE="$SCRIPT_DIR/zshrc.template"
+
 # -----------------------------------------------------------------------------
 # Colors
 # -----------------------------------------------------------------------------
@@ -296,6 +299,15 @@ install_oh_my_zsh() {
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
         "" --unattended
     success "Oh My Zsh installed"
+
+    # Apply our template in place of the generic OMZ-generated .zshrc
+    if [[ -f "$ZSHRC_TEMPLATE" ]]; then
+        info "Applying zshrc.template → ~/.zshrc"
+        cp "$ZSHRC_TEMPLATE" "$HOME/.zshrc"
+        success "~/.zshrc initialised from template"
+    else
+        warn "zshrc.template not found alongside setup.sh — keeping OMZ default ~/.zshrc"
+    fi
 }
 
 # -----------------------------------------------------------------------------
