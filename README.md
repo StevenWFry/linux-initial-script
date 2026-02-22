@@ -1,6 +1,6 @@
-# Linux Initial Setup Script
+# Linux Initial Setup Scripts
 
-A post-install setup script for Linux that installs and configures a full suite of CLI tools, fonts, and GUI apps. Designed to get a fresh system productive quickly on either bare metal or a VM.
+Two post-install setup scripts for Linux — pick the one that suits your style.
 
 ## Supported Distributions
 
@@ -11,15 +11,39 @@ A post-install setup script for Linux that installs and configures a full suite 
 | Fedora / RHEL derivatives | dnf |
 | Arch Linux and derivatives (Manjaro, EndeavourOS, etc.) | pacman |
 
+---
+
+## Which script should I use?
+
+| | `setup.sh` | `fresh-linux.sh` |
+|---|---|---|
+| **Style** | Automated — a few upfront questions, then runs unattended | Interactive — gum TUI menus let you pick sections and tools |
+| **Logging** | Terminal output | Everything logged to `~/fresh-linux-<timestamp>.log` |
+| **Distro detection** | Parses `/etc/os-release` (handles Pop!\_OS, ID\_LIKE fallback) | Checks command presence (`apt` / `dnf` / `pacman`) |
+| **Prompt theme** | Powerlevel10k (pre-built config included) | Starship |
+| **zshrc** | Applies `zshrc.template` on fresh install | Appends an additions block after confirming |
+| **Nerd Fonts** | Multi-font selector, `.tar.xz` from GitHub | JetBrainsMono only (with confirm) |
+| **apt edge cases** | Adds GPG repos for eza / gh / delta; downloads .deb for fastfetch | Plain package install (may fail on older distros) |
+| **bat / fd on Debian** | Creates `~/.local/bin` shims automatically | Not handled |
+| **Git config** | Prompts for `user.name` / `user.email` | Not included |
+| **VM support** | Auto-detects VM, installs VirtualBox Guest Additions deps | Not included |
+| **Hostname** | Optional rename | Not included |
+| **Extras** | — | Docker, mise, LazyVim, UFW firewall, Timeshift, dotfiles via stow, terminal emulator picker, multiplexer picker (tmux / zellij), yq, xh, dust, DBeaver, Insomnia, Bottles |
+
+---
+
 ## Repository Contents
 
 | File | Description |
 |---|---|
-| `setup.sh` | Main setup script |
-| `zshrc.template` | Pre-configured `~/.zshrc` applied automatically on fresh installs |
-| `p10k.zsh` | Powerlevel10k prompt config copied to `~/.p10k.zsh` on install |
+| `setup.sh` | Automated setup script |
+| `fresh-linux.sh` | Interactive TUI-driven setup script |
+| `zshrc.template` | Pre-configured `~/.zshrc` applied by `setup.sh` on fresh installs |
+| `p10k.zsh` | Powerlevel10k prompt config copied to `~/.p10k.zsh` by `setup.sh` |
 
-## Usage
+---
+
+## `setup.sh` — Automated
 
 ```bash
 git clone https://github.com/StevenWFry/linux-initial-script.git
@@ -30,11 +54,9 @@ chmod +x setup.sh
 
 > Run as your regular user — the script will prompt for `sudo` when needed. Do **not** run as root.
 
-## What It Does
+The script checks for existing installs before doing anything, making it safe to re-run.
 
-The script walks through each step interactively and checks for existing installs before doing anything, making it safe to re-run.
-
-### Prompts (asked before any installing begins)
+### Prompts (asked before installing begins)
 
 - **Hostname** — optionally rename the machine
 - **VirtualBox Guest Additions deps** — auto-detected if running in a VM; can be skipped or forced on bare metal
@@ -49,18 +71,11 @@ The script walks through each step interactively and checks for existing install
 |---|---|
 | zsh | Z Shell |
 | Oh My Zsh | zsh framework and plugin manager |
-| Powerlevel10k | Fast, highly customisable zsh prompt with an interactive setup wizard |
+| Powerlevel10k | Fast, highly customisable zsh prompt |
 | zsh-autosuggestions | Fish-like command suggestions as you type |
 | zsh-syntax-highlighting | Real-time syntax colouring in the prompt |
 
-The following built-in Oh My Zsh plugins are also enabled:
-
-| Plugin | What it adds |
-|---|---|
-| `git` | Short aliases for common git commands (`gst`, `gco`, `gp`, etc.) |
-| `sudo` | Press <kbd>Esc</kbd> twice to prepend `sudo` to the current command |
-| `history` | `h` alias and helpers for searching command history |
-| `colored-man-pages` | Colourises `man` pages for easier reading |
+Built-in Oh My Zsh plugins enabled: `git`, `sudo`, `history`, `colored-man-pages`
 
 #### Core Utilities
 | Tool | Description |
@@ -89,32 +104,14 @@ The following built-in Oh My Zsh plugins are also enabled:
 | delta | Syntax-highlighted git diffs |
 | gh | Official GitHub CLI |
 | neovim | Modal text editor |
-
-#### Shell History
-| Tool | Description |
-|---|---|
-| atuin | Encrypted, searchable shell history with sync |
-
-#### System Info & Docs
-| Tool | Description |
-|---|---|
+| atuin | Encrypted, searchable shell history |
 | fastfetch | Fast system info display |
-| tldr | Simplified man pages with practical examples |
+| tldr | Simplified man pages |
 
 #### Fonts
-| Font | Notes |
-|---|---|
-| JetBrainsMono | Great for coding |
-| FiraCode | Popular ligature font |
-| Hack | Clean and readable |
-| CascadiaCode | Microsoft's coding font |
-| Meslo | Popular for terminal prompts (used by Powerlevel10k) |
-| UbuntuMono | Ubuntu's monospace font |
-| RobotoMono | Google's monospace font |
-| SourceCodePro | Adobe's coding font |
-| NerdFontsSymbolsOnly | Just the icon glyphs, pairs with any font |
+Choose any combination from the menu — all installed to `~/.local/share/fonts/`:
 
-All fonts are installed to `~/.local/share/fonts/` and the font cache is refreshed automatically.
+JetBrainsMono · FiraCode · Hack · CascadiaCode · Meslo · UbuntuMono · RobotoMono · SourceCodePro · NerdFontsSymbolsOnly
 
 #### GUI Applications
 | App | Method | Description |
@@ -124,10 +121,8 @@ All fonts are installed to `~/.local/share/fonts/` and the font cache is refresh
 | Obsidian | Flatpak | Markdown-based note-taking |
 | Bitwarden | Flatpak | Password manager |
 
-Flatpak and the Flathub remote are configured automatically if not already present.
-
 #### VM Support (VirtualBox)
-When running inside a VirtualBox VM the script offers to install the kernel headers and build tools needed to compile Guest Additions:
+Auto-detected. Installs the kernel headers and build tools needed for Guest Additions:
 
 | Distro | Packages |
 |---|---|
@@ -135,29 +130,75 @@ When running inside a VirtualBox VM the script offers to install the kernel head
 | Fedora | `kernel-devel kernel-headers gcc make perl bzip2 elfutils-libelf-devel` |
 | Arch | `base-devel linux-headers dkms` |
 
-On Arch and Fedora it also offers to install the full guest utilities package directly. On Pop!\_OS and Debian it prints the command to run the ISO-based installer after reboot.
+### zshrc & Prompt
 
-## Notes
+On a fresh Oh My Zsh install, `zshrc.template` is copied to `~/.zshrc` in place of the OMZ default. On an existing install the file is patched instead. Both paths are idempotent.
 
-- On Debian/Ubuntu, `bat` is installed as `batcat` and `fd` as `fdfind`. The script creates `~/.local/bin/bat` and `~/.local/bin/fd` symlinks automatically.
-- `atuin` on Debian/Ubuntu is installed via the official install script to `~/.atuin/bin/`. A new terminal session is needed for it to appear in `$PATH`.
-- Fedora requires RPM Fusion for VLC — the script enables the free and nonfree repos automatically if they are not already active.
-- The script keeps `sudo` alive in the background for its entire run so you are not prompted repeatedly for a password.
-- On a fresh Oh My Zsh install the script replaces the OMZ-generated `~/.zshrc` with `zshrc.template` from this repo, which comes pre-configured with all plugins, aliases, evals, and Powerlevel10k. On an existing install the script patches the existing file instead.
-- Powerlevel10k is cloned into `~/.oh-my-zsh/custom/themes/powerlevel10k`. The theme is set in `~/.zshrc`, the instant prompt block is prepended to the top, and `~/.p10k.zsh` is sourced at the bottom. `p10k.zsh` from this repo is copied to `~/.p10k.zsh` automatically — no wizard required. To customise, edit `~/.p10k.zsh` or run `p10k configure` to regenerate it interactively.
+Powerlevel10k config (`p10k.zsh`) is copied to `~/.p10k.zsh` automatically — no wizard needed on first login. Run `p10k configure` at any time to regenerate it interactively.
 
-  **Prompt layout:**
-  - Left: distro icon → current directory → git status → (new line) → `❯`
-  - Right: exit code · execution time · background jobs · python venv · node version · time
-- `zsh-autosuggestions` and `zsh-syntax-highlighting` are cloned into `~/.oh-my-zsh/custom/plugins/` and added to the `plugins=(...)` array in `~/.zshrc` automatically. `zsh-syntax-highlighting` is always placed last in the list as required.
-- The following aliases are appended to `~/.zshrc` (idempotent — safe to re-run):
+**Prompt layout:**
+- Left: distro icon → directory → git status → `❯`
+- Right: exit code · execution time · background jobs · python venv · node version · time
 
-  | Alias | Command |
-  |---|---|
-  | `cat` | `bat --paging=never` (falls back to `batcat` on Debian/Ubuntu) |
-  | `catp` | `bat` (bat with paging enabled) |
-  | `ls` | `eza --icons --group-directories-first` |
-  | `ll` | `eza -lh --icons --group-directories-first --git` |
-  | `la` | `eza -lah --icons --group-directories-first --git` |
-  | `lt` | `eza --tree --icons --level=2` |
-  | `l` | `eza -1 --icons` |
+**Aliases added to `~/.zshrc`:**
+
+| Alias | Command |
+|---|---|
+| `cat` | `bat --paging=never` (falls back to `batcat` on Debian/Ubuntu) |
+| `catp` | `bat` (with paging) |
+| `ls` | `eza --icons --group-directories-first` |
+| `ll` | `eza -lh --icons --group-directories-first --git` |
+| `la` | `eza -lah --icons --group-directories-first --git` |
+| `lt` | `eza --tree --icons --level=2` |
+| `l` | `eza -1 --icons` |
+
+### Notes
+
+- On Debian/Ubuntu `bat` is installed as `batcat` and `fd` as `fdfind` — the script creates `~/.local/bin/bat` and `~/.local/bin/fd` symlinks automatically.
+- `atuin` on Debian/Ubuntu is installed via the official install script to `~/.atuin/bin/`.
+- Fedora: RPM Fusion (free + nonfree) is enabled automatically when installing VLC.
+- `sudo` is kept alive in the background for the entire run — you won't be prompted repeatedly.
+
+---
+
+## `fresh-linux.sh` — Interactive
+
+```bash
+git clone https://github.com/StevenWFry/linux-initial-script.git
+cd linux-initial-script
+chmod +x fresh-linux.sh
+./fresh-linux.sh
+```
+
+Uses [gum](https://github.com/charmbracelet/gum) (Charm) for interactive TUI menus. Gum is installed automatically at startup; if it fails the script falls back to plain shell prompts.
+
+All output is tee'd to a timestamped log file at `~/fresh-linux-YYYYMMDD-HHMMSS.log`.
+
+### Sections (user-selectable)
+
+| Section | What it covers |
+|---|---|
+| **System update** | Full system upgrade via the native package manager |
+| **Shell & terminal** | zsh, Oh My Zsh, zsh-autosuggestions, zsh-syntax-highlighting, fzf, zoxide, atuin, Starship prompt, terminal emulator picker, multiplexer picker |
+| **Modern CLI tools** | Multi-select picker: eza, bat, ripgrep, fd, dust, btop, delta, tldr, duf, jq, yq, xh, fastfetch, lsd |
+| **Developer tools** | build tools, gh, rsync, stow, Neovim (optional LazyVim config), Docker, mise |
+| **System utilities** | UFW firewall, Timeshift (Debian), Flatpak + Flathub |
+| **GUI apps** | Flatpak multi-select: Obsidian, Bitwarden, Flameshot, VLC, Bottles, DBeaver, Insomnia |
+| **Dotfiles** | Clone a dotfiles repo and optionally run `stow` to symlink it |
+
+### Terminal & Multiplexer Pickers
+
+**Terminal emulator** — choose one to install: `alacritty` · `kitty` · `wezterm` (via Flatpak on non-Arch)
+
+**Multiplexer** — choose: `tmux` · `zellij` · both · skip
+
+### Developer Extras
+
+- **Docker** — installed via `get.docker.com` (Debian) or native packages; `docker` group added for current user
+- **mise** — universal version manager for Node, Python, Ruby, Go, etc.
+- **LazyVim** — optionally clones the LazyVim starter config into `~/.config/nvim`
+- **UFW** — configured with `deny incoming` / `allow outgoing` / `allow ssh` and enabled
+
+### zshrc
+
+After all installs, the script offers to append a clearly-marked additions block to `~/.zshrc` containing `eval` inits and aliases for whichever tools were installed (starship, zoxide, mise, atuin, eza, bat, ripgrep, fd, btop).
