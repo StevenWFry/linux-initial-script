@@ -242,10 +242,10 @@ do_shell() {
   fi
 
   # terminal emulators
-  local term_choice
+  local term_choice="skip"
   if $USE_GUM; then
     term_choice=$(gum choose --header="Install a terminal emulator?" \
-      "alacritty" "kitty" "wezterm" "skip")
+      "alacritty" "kitty" "wezterm" "skip") || term_choice="skip"
   else
     echo "Terminal emulator: (1) alacritty (2) kitty (3) wezterm (4) skip"
     read -rp "Choice: " tc
@@ -269,9 +269,9 @@ do_shell() {
   esac
 
   # tmux or zellij
+  local mux_choice="skip"
   if $USE_GUM; then
-    local mux_choice
-    mux_choice=$(gum choose --header="Multiplexer?" "zellij" "tmux" "both" "skip")
+    mux_choice=$(gum choose --header="Multiplexer?" "zellij" "tmux" "both" "skip") || mux_choice="skip"
   else
     echo "Multiplexer: (1) zellij (2) tmux (3) both (4) skip"
     read -rp "Choice: " mc
@@ -298,7 +298,7 @@ do_cli_tools() {
   local tools
   if $USE_GUM; then
     tools=$(gum choose --no-limit \
-      --header="Select CLI tools to install (space to select, enter to confirm):" \
+      --header="Select CLI tools to install (SPACE to toggle, ENTER to confirm):" \
       "eza (better ls)"         \
       "bat (better cat)"        \
       "ripgrep (better grep)"   \
@@ -313,7 +313,12 @@ do_cli_tools() {
       "xh (better curl)"        \
       "fastfetch (system info)" \
       "lsd (ls with icons)"     \
-    )
+    ) || true
+
+    if [[ -z "$tools" ]]; then
+      info "No CLI tools selected — skipping"
+      return
+    fi
   else
     tools="eza (better ls)
 bat (better cat)
@@ -491,7 +496,7 @@ do_gui_apps() {
   local apps
   if $USE_GUM; then
     apps=$(gum choose --no-limit \
-      --header="Select GUI apps to install via Flatpak:" \
+      --header="Select GUI apps to install via Flatpak (SPACE to toggle, ENTER to confirm):" \
       "Obsidian (notes)"          \
       "Bitwarden (passwords)"     \
       "Flameshot (screenshots)"   \
@@ -499,7 +504,12 @@ do_gui_apps() {
       "Bottles (run Windows apps)" \
       "Dbeaver (database GUI)"    \
       "Insomnia (API client)"     \
-    )
+    ) || true
+
+    if [[ -z "$apps" ]]; then
+      info "No GUI apps selected — skipping"
+      return
+    fi
   else
     warn "Skipping GUI app selection (no gum). Run manually with flatpak install."
     return
@@ -608,7 +618,7 @@ main() {
   local sections
   if $USE_GUM; then
     sections=$(gum choose --no-limit \
-      --header="Select sections to run (space = toggle, enter = confirm):" \
+      --header="Select sections to run (SPACE to toggle, ENTER to confirm):" \
       "System update"      \
       "Shell & terminal"   \
       "Modern CLI tools"   \
@@ -616,7 +626,14 @@ main() {
       "System utilities"   \
       "GUI apps"           \
       "Dotfiles"           \
-    )
+    ) || true
+
+    if [[ -z "$sections" ]]; then
+      warn "No sections selected — nothing to do."
+      do_zshrc
+      print_summary
+      exit 0
+    fi
   else
     # No gum fallback: run everything
     sections="System update
