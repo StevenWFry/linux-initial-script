@@ -298,6 +298,100 @@ install_oh_my_zsh() {
     success "Oh My Zsh installed"
 }
 
+# -----------------------------------------------------------------------------
+# zsh plugins
+#   External: zsh-autosuggestions, zsh-syntax-highlighting
+#   Built-in OMZ: git, sudo, history, colored-man-pages
+# -----------------------------------------------------------------------------
+install_zsh_plugins() {
+    header "zsh plugins"
+
+    local custom_plugins="${ZSH_CUSTOM:-${HOME}/.oh-my-zsh/custom}/plugins"
+
+    if [[ ! -d "${HOME}/.oh-my-zsh" ]]; then
+        warn "Oh My Zsh not found — skipping plugin install"
+        return
+    fi
+
+    # zsh-autosuggestions
+    if [[ -d "$custom_plugins/zsh-autosuggestions" ]]; then
+        success "zsh-autosuggestions already installed"
+    else
+        info "Cloning zsh-autosuggestions..."
+        git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions \
+            "$custom_plugins/zsh-autosuggestions"
+        success "zsh-autosuggestions installed"
+    fi
+
+    # zsh-syntax-highlighting (must be sourced last)
+    if [[ -d "$custom_plugins/zsh-syntax-highlighting" ]]; then
+        success "zsh-syntax-highlighting already installed"
+    else
+        info "Cloning zsh-syntax-highlighting..."
+        git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git \
+            "$custom_plugins/zsh-syntax-highlighting"
+        success "zsh-syntax-highlighting installed"
+    fi
+
+    _configure_zsh_plugins
+}
+
+_configure_zsh_plugins() {
+    local zshrc="$HOME/.zshrc"
+
+    if [[ ! -f "$zshrc" ]]; then
+        warn "~/.zshrc not found — cannot update plugins list"
+        return
+    fi
+
+    # Only handle the common single-line format: plugins=(...)
+    if ! grep -qE '^plugins=\(' "$zshrc"; then
+        warn "Multi-line or missing plugins=() in ~/.zshrc — add these manually:"
+        warn "  zsh-autosuggestions  zsh-syntax-highlighting"
+        return
+    fi
+
+    local current_line
+    current_line=$(grep -E '^plugins=\(' "$zshrc" | head -1)
+
+    # Extract existing plugin names (strip 'plugins=(' and ')')
+    local plugin_str
+    plugin_str=$(echo "$current_line" | sed -E 's/^plugins=\(([^)]*)\)$/\1/' | tr -s ' ')
+
+    # Remove zsh-syntax-highlighting if present (re-added at the end to keep it last)
+    plugin_str=$(echo "$plugin_str" | sed 's/\bzsh-syntax-highlighting\b//g' | tr -s ' ' | sed 's/^ //;s/ $//')
+
+    local changed=false
+
+    # Add built-in OMZ plugins if absent
+    for plugin in sudo history colored-man-pages; do
+        if ! echo " $plugin_str " | grep -q " $plugin "; then
+            plugin_str="$plugin_str $plugin"
+            changed=true
+        fi
+    done
+
+    # Add zsh-autosuggestions before syntax-highlighting
+    if ! echo " $plugin_str " | grep -q " zsh-autosuggestions "; then
+        plugin_str="$plugin_str zsh-autosuggestions"
+        changed=true
+    fi
+
+    # Always append zsh-syntax-highlighting last
+    plugin_str="$plugin_str zsh-syntax-highlighting"
+
+    # Normalise whitespace
+    plugin_str=$(echo "$plugin_str" | tr -s ' ' | sed 's/^ //;s/ $//')
+
+    if grep -q "zsh-syntax-highlighting" "$current_line" 2>/dev/null && ! $changed; then
+        success "~/.zshrc plugins already up to date"
+        return
+    fi
+
+    sed -i "s|^plugins=(.*)|plugins=(${plugin_str})|" "$zshrc"
+    success "Updated ~/.zshrc: plugins=(${plugin_str})"
+}
+
 set_default_shell_zsh() {
     header "Default shell"
     local zsh_path
@@ -735,7 +829,7 @@ print_summary() {
     echo -e "╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${BOLD}Installed / configured:${NC}"
-    echo "  Shell          │ zsh, Oh My Zsh"
+    echo "  Shell          │ zsh, Oh My Zsh, zsh-autosuggestions, zsh-syntax-highlighting"
     echo "  Downloads      │ curl, wget"
     echo "  Data           │ jq"
     echo "  Clipboard      │ xclip"
@@ -804,6 +898,7 @@ main() {
     configure_git
     install_zsh
     install_oh_my_zsh
+    install_zsh_plugins
     install_modern_cli
     install_eza
     install_atuin
