@@ -392,6 +392,39 @@ _configure_zsh_plugins() {
     success "Updated ~/.zshrc: plugins=(${plugin_str})"
 }
 
+# -----------------------------------------------------------------------------
+# Configure ~/.zshrc — zoxide and atuin init evals
+# -----------------------------------------------------------------------------
+configure_zshrc_evals() {
+    header "Configuring ~/.zshrc (zoxide + atuin init)"
+
+    local zshrc="$HOME/.zshrc"
+
+    # Create a minimal .zshrc if Oh My Zsh somehow didn't make one
+    if [[ ! -f "$zshrc" ]]; then
+        warn "~/.zshrc not found — creating a minimal one"
+        touch "$zshrc"
+    fi
+
+    # Each entry: "guard_string" "line_to_append"
+    local -a evals=(
+        "zoxide init"   'eval "$(zoxide init zsh)"'
+        "atuin init"    'eval "$(atuin init zsh)"'
+    )
+
+    local i
+    for (( i = 0; i < ${#evals[@]}; i += 2 )); do
+        local guard="${evals[$i]}"
+        local line="${evals[$i+1]}"
+        if grep -qF "$guard" "$zshrc"; then
+            success "Already present: $guard"
+        else
+            printf '\n%s\n' "$line" >> "$zshrc"
+            success "Added to ~/.zshrc: $line"
+        fi
+    done
+}
+
 set_default_shell_zsh() {
     header "Default shell"
     local zsh_path
@@ -912,6 +945,7 @@ main() {
     setup_flatpak
     install_obsidian
     install_bitwarden
+    configure_zshrc_evals
 
     [[ "$do_vbox" == "true" ]] && install_vbox_guest_deps && offer_vbox_utils
 
