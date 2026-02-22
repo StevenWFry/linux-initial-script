@@ -421,6 +421,27 @@ install_starship() {
     fi
 
     _configure_starship_zshrc
+    _install_starship_config
+}
+
+_install_starship_config() {
+    local target_dir="$HOME/.config"
+    local target="$target_dir/starship.toml"
+
+    if [[ -f "$target" ]]; then
+        success "~/.config/starship.toml already exists — skipping"
+        return
+    fi
+
+    mkdir -p "$target_dir"
+
+    if [[ -f "$SCRIPT_DIR/starship.toml" ]]; then
+        cp "$SCRIPT_DIR/starship.toml" "$target"
+        success "Copied starship.toml → ~/.config/starship.toml"
+    else
+        warn "starship.toml not found alongside setup.sh — skipping"
+        info "Create ~/.config/starship.toml to customise your prompt."
+    fi
 }
 
 _configure_starship_zshrc() {

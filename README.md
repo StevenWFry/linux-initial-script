@@ -40,6 +40,7 @@ Two post-install setup scripts for Linux — pick the one that suits your style.
 | `fresh-linux.sh` | Interactive TUI-driven setup script |
 | `zshrc.template` | Pre-configured `~/.zshrc` applied by `setup.sh` on fresh installs |
 | `p10k.zsh` | Powerlevel10k prompt config copied to `~/.p10k.zsh` by `setup.sh` |
+| `starship.toml` | Starship prompt config copied to `~/.config/starship.toml` by `setup.sh` |
 
 ---
 
@@ -138,7 +139,7 @@ The prompt theme is chosen interactively at the start of the run:
 | Choice | What happens |
 |---|---|
 | **Powerlevel10k** (default) | `zshrc.template` (p10k pre-configured) is copied to `~/.zshrc` on fresh installs; `p10k.zsh` is copied to `~/.p10k.zsh` — no wizard needed. Prompt: distro icon → dir → git → `❯` / exit code · exec time · jobs · venv · node · time |
-| **Starship** | OMZ default `~/.zshrc` is kept; `ZSH_THEME` is set to `""` and `eval "$(starship init zsh)"` is appended. Configure via `~/.config/starship.toml` |
+| **Starship** | OMZ default `~/.zshrc` is kept; `ZSH_THEME` is set to `""` and `eval "$(starship init zsh)"` is appended. `starship.toml` from this repo is copied to `~/.config/starship.toml` automatically |
 | **Skip** | No prompt theme installed or modified |
 
 **Aliases added to `~/.zshrc`:**
