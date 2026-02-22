@@ -17,6 +17,7 @@ A post-install setup script for Linux that installs and configures a full suite 
 |---|---|
 | `setup.sh` | Main setup script |
 | `zshrc.template` | Pre-configured `~/.zshrc` applied automatically on fresh installs |
+| `p10k.zsh` | Powerlevel10k prompt config copied to `~/.p10k.zsh` on install |
 
 ## Usage
 
@@ -143,7 +144,11 @@ On Arch and Fedora it also offers to install the full guest utilities package di
 - Fedora requires RPM Fusion for VLC — the script enables the free and nonfree repos automatically if they are not already active.
 - The script keeps `sudo` alive in the background for its entire run so you are not prompted repeatedly for a password.
 - On a fresh Oh My Zsh install the script replaces the OMZ-generated `~/.zshrc` with `zshrc.template` from this repo, which comes pre-configured with all plugins, aliases, evals, and Powerlevel10k. On an existing install the script patches the existing file instead.
-- Powerlevel10k is cloned into `~/.oh-my-zsh/custom/themes/powerlevel10k`. The theme is set in `~/.zshrc`, the instant prompt block is prepended to the top, and `~/.p10k.zsh` is sourced at the bottom. Run `p10k configure` after opening a new shell to complete the prompt setup wizard.
+- Powerlevel10k is cloned into `~/.oh-my-zsh/custom/themes/powerlevel10k`. The theme is set in `~/.zshrc`, the instant prompt block is prepended to the top, and `~/.p10k.zsh` is sourced at the bottom. `p10k.zsh` from this repo is copied to `~/.p10k.zsh` automatically — no wizard required. To customise, edit `~/.p10k.zsh` or run `p10k configure` to regenerate it interactively.
+
+  **Prompt layout:**
+  - Left: distro icon → current directory → git status → (new line) → `❯`
+  - Right: exit code · execution time · background jobs · python venv · node version · time
 - `zsh-autosuggestions` and `zsh-syntax-highlighting` are cloned into `~/.oh-my-zsh/custom/plugins/` and added to the `plugins=(...)` array in `~/.zshrc` automatically. `zsh-syntax-highlighting` is always placed last in the list as required.
 - The following aliases are appended to `~/.zshrc` (idempotent — safe to re-run):
 

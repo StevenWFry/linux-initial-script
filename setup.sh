@@ -332,6 +332,22 @@ install_powerlevel10k() {
     fi
 
     _configure_p10k_zshrc
+    _install_p10k_config
+}
+
+_install_p10k_config() {
+    local target="$HOME/.p10k.zsh"
+    if [[ -f "$target" ]]; then
+        success "~/.p10k.zsh already exists — skipping"
+        return
+    fi
+    if [[ -f "$SCRIPT_DIR/p10k.zsh" ]]; then
+        cp "$SCRIPT_DIR/p10k.zsh" "$target"
+        success "Copied p10k.zsh → ~/.p10k.zsh"
+    else
+        warn "p10k.zsh not found alongside setup.sh — skipping"
+        info "Run 'p10k configure' to generate a config interactively."
+    fi
 }
 
 _configure_p10k_zshrc() {
