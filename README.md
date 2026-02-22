@@ -20,7 +20,7 @@ Two post-install setup scripts for Linux — pick the one that suits your style.
 | **Style** | Automated — a few upfront questions, then runs unattended | Interactive — gum TUI menus let you pick sections and tools |
 | **Logging** | Terminal output | Everything logged to `~/fresh-linux-<timestamp>.log` |
 | **Distro detection** | Parses `/etc/os-release` (handles Pop!\_OS, ID\_LIKE fallback) | Checks command presence (`apt` / `dnf` / `pacman`) |
-| **Prompt theme** | Powerlevel10k (pre-built config included) | Starship |
+| **Prompt theme** | Powerlevel10k or Starship (chosen at runtime, pre-built p10k config included) | Starship |
 | **zshrc** | Applies `zshrc.template` on fresh install | Appends an additions block after confirming |
 | **Nerd Fonts** | Multi-font selector, `.tar.xz` from GitHub | JetBrainsMono only (with confirm) |
 | **apt edge cases** | Adds GPG repos for eza / gh / delta; downloads .deb for fastfetch | Plain package install (may fail on older distros) |
@@ -71,7 +71,8 @@ The script checks for existing installs before doing anything, making it safe to
 |---|---|
 | zsh | Z Shell |
 | Oh My Zsh | zsh framework and plugin manager |
-| Powerlevel10k | Fast, highly customisable zsh prompt |
+| Powerlevel10k | Fast, highly customisable zsh prompt with powerline arrows and pre-built config |
+| Starship | Minimal, fast, cross-shell prompt configured via `~/.config/starship.toml` |
 | zsh-autosuggestions | Fish-like command suggestions as you type |
 | zsh-syntax-highlighting | Real-time syntax colouring in the prompt |
 
@@ -132,13 +133,13 @@ Auto-detected. Installs the kernel headers and build tools needed for Guest Addi
 
 ### zshrc & Prompt
 
-On a fresh Oh My Zsh install, `zshrc.template` is copied to `~/.zshrc` in place of the OMZ default. On an existing install the file is patched instead. Both paths are idempotent.
+The prompt theme is chosen interactively at the start of the run:
 
-Powerlevel10k config (`p10k.zsh`) is copied to `~/.p10k.zsh` automatically — no wizard needed on first login. Run `p10k configure` at any time to regenerate it interactively.
-
-**Prompt layout:**
-- Left: distro icon → directory → git status → `❯`
-- Right: exit code · execution time · background jobs · python venv · node version · time
+| Choice | What happens |
+|---|---|
+| **Powerlevel10k** (default) | `zshrc.template` (p10k pre-configured) is copied to `~/.zshrc` on fresh installs; `p10k.zsh` is copied to `~/.p10k.zsh` — no wizard needed. Prompt: distro icon → dir → git → `❯` / exit code · exec time · jobs · venv · node · time |
+| **Starship** | OMZ default `~/.zshrc` is kept; `ZSH_THEME` is set to `""` and `eval "$(starship init zsh)"` is appended. Configure via `~/.config/starship.toml` |
+| **Skip** | No prompt theme installed or modified |
 
 **Aliases added to `~/.zshrc`:**
 

@@ -9,6 +9,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZSHRC_TEMPLATE="$SCRIPT_DIR/zshrc.template"
 
+# Set by the upfront prompt-theme question in main()
+PROMPT_THEME="p10k"   # p10k | starship | skip
+
 # -----------------------------------------------------------------------------
 # Colors
 # -----------------------------------------------------------------------------
@@ -300,11 +303,13 @@ install_oh_my_zsh() {
         "" --unattended
     success "Oh My Zsh installed"
 
-    # Apply our template in place of the generic OMZ-generated .zshrc
-    if [[ -f "$ZSHRC_TEMPLATE" ]]; then
+    # Apply our pre-built template only for p10k (it has p10k baked in)
+    if [[ "$PROMPT_THEME" == "p10k" && -f "$ZSHRC_TEMPLATE" ]]; then
         info "Applying zshrc.template → ~/.zshrc"
         cp "$ZSHRC_TEMPLATE" "$HOME/.zshrc"
         success "~/.zshrc initialised from template"
+    elif [[ "$PROMPT_THEME" != "p10k" ]]; then
+        info "Skipping template (non-p10k theme) — keeping OMZ default ~/.zshrc"
     else
         warn "zshrc.template not found alongside setup.sh — keeping OMZ default ~/.zshrc"
     fi
@@ -389,6 +394,52 @@ BLOCK
     fi
 
     info "Run 'p10k configure' after opening a new shell to set up your prompt."
+}
+
+# -----------------------------------------------------------------------------
+# Starship
+# -----------------------------------------------------------------------------
+install_starship() {
+    header "Starship"
+
+    if cmd_exists starship; then
+        success "Starship already installed ($(starship --version))"
+    else
+        case "$DISTRO" in
+            popos | debian)
+                info "Installing Starship via official install script..."
+                curl -sS https://starship.rs/install.sh | sh -s -- --yes
+                ;;
+            fedora)
+                pkg_install starship
+                ;;
+            arch)
+                pkg_install starship
+                ;;
+        esac
+        success "Starship installed"
+    fi
+
+    _configure_starship_zshrc
+}
+
+_configure_starship_zshrc() {
+    local zshrc="$HOME/.zshrc"
+    [[ ! -f "$zshrc" ]] && return
+
+    # Disable OMZ theme management (empty string = let Starship handle the prompt)
+    if grep -q '^ZSH_THEME=' "$zshrc"; then
+        sed -i 's|^ZSH_THEME=.*|ZSH_THEME=""|' "$zshrc"
+        success "ZSH_THEME set to \"\" (Starship manages the prompt)"
+    fi
+
+    # Add starship init eval if not already present
+    if grep -q 'starship init' "$zshrc"; then
+        success "Starship init already in ~/.zshrc"
+    else
+        printf '\neval "$(starship init zsh)"\n' >> "$zshrc"
+        success "Added starship init to ~/.zshrc"
+    fi
 }
 
 # -----------------------------------------------------------------------------
@@ -992,13 +1043,20 @@ install_bitwarden() {
 print_summary() {
     local do_vbox="${1:-false}"
 
+    local prompt_label
+    case "$PROMPT_THEME" in
+        p10k)     prompt_label="Powerlevel10k" ;;
+        starship) prompt_label="Starship"      ;;
+        *)        prompt_label="(skipped)"     ;;
+    esac
+
     echo ""
     echo -e "${BOLD}${GREEN}╔══════════════════════════════════════════════════════════╗"
     echo -e "║                   Setup complete!                        ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${BOLD}Installed / configured:${NC}"
-    echo "  Shell          │ zsh, Oh My Zsh, zsh-autosuggestions, zsh-syntax-highlighting"
+    echo "  Shell          │ zsh, Oh My Zsh (${prompt_label}), zsh-autosuggestions, zsh-syntax-highlighting"
     echo "  Aliases        │ cat/catp→bat  ls/ll/la/lt/l→eza"
     echo "  Downloads      │ curl, wget"
     echo "  Data           │ jq"
@@ -1040,6 +1098,21 @@ main() {
     detect_vm
 
     # --- Ask upfront questions before any installing starts ---
+
+    # Prompt theme selection
+    header "Prompt theme"
+    echo "  1) Powerlevel10k  — powerline arrows, git info, pre-built config included"
+    echo "  2) Starship       — fast, minimal, cross-shell, toml config"
+    echo "  3) Skip           — keep whatever is already set"
+    echo ""
+    ask THEME_CHOICE "Choice" "1"
+    case "${THEME_CHOICE:-1}" in
+        2) PROMPT_THEME="starship" ;;
+        3) PROMPT_THEME="skip"    ;;
+        *) PROMPT_THEME="p10k"    ;;
+    esac
+    info "Prompt theme: ${PROMPT_THEME}"
+
     local do_vbox=false
 
     if $IS_VM; then
@@ -1068,7 +1141,11 @@ main() {
     configure_git
     install_zsh
     install_oh_my_zsh
-    install_powerlevel10k
+    case "$PROMPT_THEME" in
+        p10k)     install_powerlevel10k ;;
+        starship) install_starship      ;;
+        skip)     info "Skipping prompt theme" ;;
+    esac
     install_zsh_plugins
     install_modern_cli
     install_eza
