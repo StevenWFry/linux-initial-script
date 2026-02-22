@@ -135,3 +135,14 @@ On Arch and Fedora it also offers to install the full guest utilities package di
 - Fedora requires RPM Fusion for VLC — the script enables the free and nonfree repos automatically if they are not already active.
 - The script keeps `sudo` alive in the background for its entire run so you are not prompted repeatedly for a password.
 - `zsh-autosuggestions` and `zsh-syntax-highlighting` are cloned into `~/.oh-my-zsh/custom/plugins/` and added to the `plugins=(...)` array in `~/.zshrc` automatically. `zsh-syntax-highlighting` is always placed last in the list as required.
+- The following aliases are appended to `~/.zshrc` (idempotent — safe to re-run):
+
+  | Alias | Command |
+  |---|---|
+  | `cat` | `bat --paging=never` (falls back to `batcat` on Debian/Ubuntu) |
+  | `catp` | `bat` (bat with paging enabled) |
+  | `ls` | `eza --icons --group-directories-first` |
+  | `ll` | `eza -lh --icons --group-directories-first --git` |
+  | `la` | `eza -lah --icons --group-directories-first --git` |
+  | `lt` | `eza --tree --icons --level=2` |
+  | `l` | `eza -1 --icons` |

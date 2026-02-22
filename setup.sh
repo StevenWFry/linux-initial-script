@@ -425,6 +425,49 @@ configure_zshrc_evals() {
     done
 }
 
+# -----------------------------------------------------------------------------
+# Shell aliases — bat and eza
+# -----------------------------------------------------------------------------
+configure_shell_aliases() {
+    header "Shell aliases (bat + eza)"
+
+    local zshrc="$HOME/.zshrc"
+    local marker="# --- bat & eza aliases"
+
+    if [[ ! -f "$zshrc" ]]; then
+        warn "~/.zshrc not found — skipping aliases"
+        return
+    fi
+
+    if grep -qF "$marker" "$zshrc"; then
+        success "Aliases already present in ~/.zshrc"
+        return
+    fi
+
+    cat >> "$zshrc" <<'EOF'
+
+# --- bat & eza aliases ---
+
+# bat — falls back to batcat (Debian/Ubuntu package name)
+if command -v bat &>/dev/null; then
+    alias cat='bat --paging=never'
+    alias catp='bat'                      # bat with paging
+elif command -v batcat &>/dev/null; then
+    alias cat='batcat --paging=never'
+    alias catp='batcat'
+fi
+
+# eza — modern ls replacement
+alias ls='eza --icons --group-directories-first'
+alias ll='eza -lh --icons --group-directories-first --git'
+alias la='eza -lah --icons --group-directories-first --git'
+alias lt='eza --tree --icons --level=2'
+alias l='eza -1 --icons'
+EOF
+
+    success "bat and eza aliases added to ~/.zshrc"
+}
+
 set_default_shell_zsh() {
     header "Default shell"
     local zsh_path
@@ -863,6 +906,7 @@ print_summary() {
     echo ""
     echo -e "${BOLD}Installed / configured:${NC}"
     echo "  Shell          │ zsh, Oh My Zsh, zsh-autosuggestions, zsh-syntax-highlighting"
+    echo "  Aliases        │ cat/catp→bat  ls/ll/la/lt/l→eza"
     echo "  Downloads      │ curl, wget"
     echo "  Data           │ jq"
     echo "  Clipboard      │ xclip"
@@ -946,6 +990,7 @@ main() {
     install_obsidian
     install_bitwarden
     configure_zshrc_evals
+    configure_shell_aliases
 
     [[ "$do_vbox" == "true" ]] && install_vbox_guest_deps && offer_vbox_utils
 
