@@ -311,6 +311,71 @@ install_oh_my_zsh() {
 }
 
 # -----------------------------------------------------------------------------
+# Powerlevel10k
+# -----------------------------------------------------------------------------
+install_powerlevel10k() {
+    header "Powerlevel10k"
+
+    if [[ ! -d "${HOME}/.oh-my-zsh" ]]; then
+        warn "Oh My Zsh not found — skipping Powerlevel10k"
+        return
+    fi
+
+    local p10k_dir="${ZSH_CUSTOM:-${HOME}/.oh-my-zsh/custom}/themes/powerlevel10k"
+
+    if [[ -d "$p10k_dir" ]]; then
+        success "Powerlevel10k already installed"
+    else
+        info "Cloning Powerlevel10k..."
+        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$p10k_dir"
+        success "Powerlevel10k installed"
+    fi
+
+    _configure_p10k_zshrc
+}
+
+_configure_p10k_zshrc() {
+    local zshrc="$HOME/.zshrc"
+    [[ ! -f "$zshrc" ]] && return
+
+    # 1. Set ZSH_THEME
+    if grep -q 'ZSH_THEME="powerlevel10k/powerlevel10k"' "$zshrc"; then
+        success "ZSH_THEME already set to powerlevel10k"
+    else
+        sed -i 's|^ZSH_THEME=.*|ZSH_THEME="powerlevel10k/powerlevel10k"|' "$zshrc"
+        success "ZSH_THEME → powerlevel10k/powerlevel10k"
+    fi
+
+    # 2. Prepend instant-prompt block (must be near the top of .zshrc)
+    if ! grep -q 'p10k-instant-prompt' "$zshrc"; then
+        local tmp
+        tmp=$(mktemp)
+        cat > "$tmp" <<'BLOCK'
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+BLOCK
+        cat "$tmp" "$zshrc" > "${zshrc}.tmp" && mv "${zshrc}.tmp" "$zshrc"
+        rm -f "$tmp"
+        success "Added p10k instant prompt block to ~/.zshrc"
+    else
+        success "p10k instant prompt already present"
+    fi
+
+    # 3. Source ~/.p10k.zsh at the end
+    if ! grep -q 'p10k.zsh' "$zshrc"; then
+        printf '\n# Powerlevel10k config — run `p10k configure` to regenerate\n[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh\n' >> "$zshrc"
+        success "Added ~/.p10k.zsh source to ~/.zshrc"
+    else
+        success "~/.p10k.zsh source already present"
+    fi
+
+    info "Run 'p10k configure' after opening a new shell to set up your prompt."
+}
+
+# -----------------------------------------------------------------------------
 # zsh plugins
 #   External: zsh-autosuggestions, zsh-syntax-highlighting
 #   Built-in OMZ: git, sudo, history, colored-man-pages
@@ -987,6 +1052,7 @@ main() {
     configure_git
     install_zsh
     install_oh_my_zsh
+    install_powerlevel10k
     install_zsh_plugins
     install_modern_cli
     install_eza
